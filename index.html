@@ -1,434 +1,374 @@
 <!DOCTYPE html>
-
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>身份证校验码计算器</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0E1211">
+<title>焦距换算 · 画幅等效计算</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --ink:#0E1211;
+    --panel:#161B1A;
+    --panel-2:#1D2423;
+    --line:#2B3433;
+    --text:#E9E7E1;
+    --dim:#8B9491;
+    --mark:#D2452F;
+    --scale:#6FA8C7;
+    --r:5px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    --cond:"Avenir Next Condensed","Roboto Condensed","Segoe UI Variable Display","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+    --pad:clamp(14px,3.2vw,20px);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+    padding:clamp(20px,5vw,44px) clamp(14px,4vw,28px) calc(56px + env(safe-area-inset-bottom));
+    background-image:radial-gradient(1200px 520px at 50% -240px,rgba(111,168,199,.10),transparent 70%);
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+  .tnum{font-variant-numeric:tabular-nums}
 
-:root {
-–bg: #0f1118;
-–card: #181b25;
-–card-border: #252a38;
-–accent: #5b8def;
-–accent-glow: rgba(91, 141, 239, 0.25);
-–accent-soft: rgba(91, 141, 239, 0.08);
-–text: #e8eaf0;
-–text-dim: #7a8099;
-–success: #4ecf8b;
-–success-glow: rgba(78, 207, 139, 0.2);
-–error: #ef6b6b;
-–digit-bg: #1e2230;
-–digit-border: #2d3348;
-}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin:0 0 10px}
+  h1{font-family:var(--cond);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1;letter-spacing:.04em;margin:0 0 10px}
+  .lede{color:var(--dim);font-size:clamp(13px,2.6vw,14.5px);margin:0 0 clamp(20px,4vw,30px);max-width:44em}
 
-body {
-font-family: ‘Noto Sans SC’, sans-serif;
-background: var(–bg);
-color: var(–text);
-min-height: 100dvh;
-display: flex;
-align-items: center;
-justify-content: center;
-padding: 24px;
-overflow: hidden;
-}
+  .cols{display:grid;gap:14px;align-items:start}
+  @media (min-width:900px){
+    .cols{grid-template-columns:minmax(0,1fr) 380px;gap:18px}
+    .readout{position:sticky;top:24px}
+  }
+  .controls,.readout{display:grid;gap:14px;min-width:0}
 
-/* Ambient background glow */
-body::before {
-content: ‘’;
-position: fixed;
-top: -40%; left: -20%;
-width: 80vw; height: 80vw;
-background: radial-gradient(circle, rgba(91,141,239,0.06) 0%, transparent 60%);
-pointer-events: none;
-z-index: 0;
-}
-body::after {
-content: ‘’;
-position: fixed;
-bottom: -30%; right: -10%;
-width: 60vw; height: 60vw;
-background: radial-gradient(circle, rgba(78,207,139,0.04) 0%, transparent 60%);
-pointer-events: none;
-z-index: 0;
-}
+  .block{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:var(--pad)}
+  .label{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--dim);margin:0 0 12px;display:flex;justify-content:space-between;
+    align-items:baseline;gap:10px;flex-wrap:wrap;
+  }
 
-.container {
-position: relative;
-z-index: 1;
-width: 100%;
-max-width: 520px;
-}
+  .formats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  @media (min-width:560px){.formats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @media (min-width:900px){.formats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (min-width:1180px){.formats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .fmt{
+    appearance:none;cursor:pointer;text-align:left;min-height:52px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);
+    color:var(--dim);padding:9px 10px;font-family:var(--sans);
+    transition:border-color .16s,color .16s,background .16s;
+  }
+  .fmt b{display:block;font-family:var(--cond);font-weight:600;font-size:16px;letter-spacing:.03em;color:var(--text);line-height:1.2}
+  .fmt span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.02em;margin-top:3px;white-space:nowrap}
+  @media (hover:hover){.fmt:hover{border-color:#3D4A48}}
+  .fmt[aria-pressed="true"]{background:#20292A;border-color:currentColor}
+  .from .fmt[aria-pressed="true"]{color:var(--mark)}
+  .to .fmt[aria-pressed="true"]{color:var(--scale)}
+  :focus-visible{outline:2px solid var(--scale);outline-offset:2px}
 
-/* Header */
-.header {
-text-align: center;
-margin-bottom: 36px;
-}
-.header .icon {
-width: 56px; height: 56px;
-border-radius: 16px;
-background: linear-gradient(135deg, var(–accent), #7c5bef);
-display: inline-flex;
-align-items: center;
-justify-content: center;
-font-size: 24px;
-margin-bottom: 16px;
-box-shadow: 0 8px 32px var(–accent-glow);
-}
-.header h1 {
-font-size: 22px;
-font-weight: 700;
-letter-spacing: 0.5px;
-margin-bottom: 6px;
-}
-.header p {
-font-size: 13px;
-color: var(–text-dim);
-font-weight: 300;
-}
+  .entry{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px}
+  #focal{
+    width:100%;min-width:0;background:transparent;border:0;color:var(--text);
+    font-family:var(--cond);font-weight:500;font-size:clamp(40px,10vw,56px);
+    letter-spacing:.02em;padding:0;line-height:1.05;font-variant-numeric:tabular-nums;
+  }
+  #focal:focus{outline:0}
+  #focal::-webkit-outer-spin-button,#focal::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  #focal[type=number]{-moz-appearance:textfield}
+  .unit{font-family:var(--cond);font-size:clamp(18px,4.5vw,24px);color:var(--dim);letter-spacing:.06em}
 
-/* Card */
-.card {
-background: var(–card);
-border: 1px solid var(–card-border);
-border-radius: 20px;
-padding: 32px 28px;
-box-shadow: 0 12px 48px rgba(0,0,0,0.3);
-}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;margin:20px 0 14px;height:22px}
+  input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--line)}
+  input[type=range]::-moz-range-track{height:1px;background:var(--line)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-10px;border-radius:50%;background:var(--mark);cursor:pointer;border:0}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:var(--mark);cursor:pointer}
 
-.label {
-font-size: 12px;
-font-weight: 600;
-color: var(–text-dim);
-text-transform: uppercase;
-letter-spacing: 1.5px;
-margin-bottom: 14px;
-}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    cursor:pointer;background:transparent;border:1px solid var(--line);border-radius:999px;
+    color:var(--dim);font-family:var(--mono);font-size:12px;padding:7px 12px;min-height:34px;
+    transition:color .16s,border-color .16s;
+  }
+  @media (hover:hover){.chip:hover{color:var(--text);border-color:#3D4A48}}
+  .chip[aria-pressed="true"]{color:var(--text);border-color:var(--mark)}
 
-/* Input area */
-.input-row {
-display: flex;
-gap: 6px;
-align-items: center;
-margin-bottom: 8px;
-}
-.input-wrap {
-flex: 1;
-position: relative;
-}
-.input-wrap input {
-width: 100%;
-background: var(–digit-bg);
-border: 1.5px solid var(–digit-border);
-border-radius: 12px;
-padding: 16px 18px;
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 22px;
-font-weight: 600;
-letter-spacing: 4px;
-color: var(–text);
-outline: none;
-transition: border-color 0.25s, box-shadow 0.25s;
-caret-color: var(–accent);
-}
-.input-wrap input::placeholder {
-color: #3a3f54;
-letter-spacing: 2px;
-font-weight: 400;
-}
-.input-wrap input:focus {
-border-color: var(–accent);
-box-shadow: 0 0 0 3px var(–accent-glow);
-}
-.input-wrap input.error {
-border-color: var(–error);
-box-shadow: 0 0 0 3px rgba(239,107,107,0.15);
-}
+  .swapline{display:flex;align-items:center;gap:12px}
+  .swapline .rule{flex:1;height:1px;background:var(--line)}
+  #swap{
+    cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;
+    color:var(--dim);font-family:var(--mono);font-size:12px;letter-spacing:.08em;
+    padding:9px 16px;min-height:40px;transition:color .16s,border-color .16s;
+  }
+  @media (hover:hover){#swap:hover{color:var(--text);border-color:#3D4A48}}
 
-.char-count {
-text-align: right;
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 12px;
-color: var(–text-dim);
-margin-bottom: 24px;
-padding-right: 4px;
-transition: color 0.2s;
-}
-.char-count.full { color: var(–success); }
-.char-count.over { color: var(–error); }
+  .result{border:1px solid var(--line);background:linear-gradient(180deg,#1A2223,#141A19);border-radius:var(--r);padding:var(--pad)}
+  .out{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  #equiv{
+    font-family:var(--cond);font-weight:600;font-size:clamp(54px,15vw,76px);line-height:.94;
+    letter-spacing:.01em;color:var(--scale);font-variant-numeric:tabular-nums;
+  }
+  .out .unit{font-size:clamp(20px,5vw,26px)}
+  .outcap{font-size:12.5px;color:var(--dim);margin:12px 0 0}
+  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);margin-top:16px;overflow:hidden}
+  .stat{background:#141A19;padding:11px 12px;min-width:0}
+  .stat dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin:0 0 3px;white-space:nowrap}
+  .stat dd{margin:0;font-family:var(--cond);font-size:clamp(19px,4.6vw,23px);font-weight:500;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .stat dd small{font-size:12px;color:var(--dim);margin-left:2px}
 
-.hint {
-font-size: 12px;
-color: var(–error);
-min-height: 18px;
-margin-bottom: 20px;
-opacity: 0;
-transition: opacity 0.2s;
-}
-.hint.show { opacity: 1; }
+  .frames svg{width:100%;height:auto;display:block}
 
-/* Divider */
-.divider {
-height: 1px;
-background: linear-gradient(90deg, transparent, var(–card-border), transparent);
-margin-bottom: 26px;
-}
+  .apr{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .apr select{
+    background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--r);
+    font-family:var(--cond);font-size:17px;letter-spacing:.03em;padding:10px 12px;min-height:44px;cursor:pointer;
+  }
+  .apr .arrow{color:var(--dim);font-family:var(--mono);font-size:12px}
+  .apr .val{font-family:var(--cond);font-size:26px;color:var(--scale);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .apr .near{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .apr .note{color:var(--dim);font-size:12px;flex-basis:100%;margin:0}
 
-/* Result */
-.result-area {
-opacity: 0;
-transform: translateY(12px);
-transition: opacity 0.4s ease, transform 0.4s ease;
-pointer-events: none;
-}
-.result-area.visible {
-opacity: 1;
-transform: translateY(0);
-pointer-events: auto;
-}
+  footer{color:var(--dim);font-size:12px;line-height:1.9;margin-top:24px}
+  footer b{color:#B9C0BD;font-weight:500}
 
-.result-grid {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 14px;
-margin-bottom: 20px;
-}
-.result-box {
-background: var(–digit-bg);
-border: 1px solid var(–digit-border);
-border-radius: 14px;
-padding: 18px 16px;
-text-align: center;
-}
-.result-box .result-label {
-font-size: 11px;
-color: var(–text-dim);
-text-transform: uppercase;
-letter-spacing: 1px;
-margin-bottom: 10px;
-}
-.result-box .check-digit {
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 42px;
-font-weight: 700;
-color: var(–success);
-text-shadow: 0 0 24px var(–success-glow);
-line-height: 1;
-}
-.result-box .full-id {
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 17px;
-font-weight: 600;
-color: var(–text);
-letter-spacing: 2px;
-word-break: break-all;
-line-height: 1.5;
-}
-.result-box .full-id .highlight {
-color: var(–success);
-text-shadow: 0 0 12px var(–success-glow);
-}
-
-/* Copy button */
-.copy-btn {
-width: 100%;
-padding: 14px;
-border: 1.5px solid var(–card-border);
-border-radius: 12px;
-background: transparent;
-color: var(–text-dim);
-font-family: ‘Noto Sans SC’, sans-serif;
-font-size: 13px;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.25s;
-letter-spacing: 0.5px;
-}
-.copy-btn:hover {
-border-color: var(–accent);
-color: var(–accent);
-background: var(–accent-soft);
-}
-.copy-btn:active {
-transform: scale(0.98);
-}
-.copy-btn.copied {
-border-color: var(–success);
-color: var(–success);
-background: rgba(78,207,139,0.08);
-}
-
-/* Clear button */
-.clear-btn {
-position: absolute;
-right: 12px;
-top: 50%;
-transform: translateY(-50%);
-width: 28px; height: 28px;
-border-radius: 8px;
-border: none;
-background: rgba(255,255,255,0.06);
-color: var(–text-dim);
-font-size: 16px;
-cursor: pointer;
-display: none;
-align-items: center;
-justify-content: center;
-transition: background 0.2s, color 0.2s;
-}
-.clear-btn:hover { background: rgba(239,107,107,0.15); color: var(–error); }
-.clear-btn.show { display: inline-flex; }
-
-@media (max-width: 480px) {
-.card { padding: 24px 20px; }
-.input-wrap input { font-size: 18px; letter-spacing: 2px; padding: 14px; }
-.result-box .full-id { font-size: 14px; letter-spacing: 1px; }
-.result-box .check-digit { font-size: 36px; }
-}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
-
 </head>
 <body>
+<div class="wrap">
 
-<div class="container">
-  <div class="header">
-    <div class="icon">🆔</div>
-    <h1>身份证校验码计算器</h1>
-    <p>输入前17位数字，自动生成第18位校验码</p>
-  </div>
+  <p class="eyebrow">Equivalent Focal Length</p>
+  <h1>焦距换算</h1>
+  <p class="lede">选择手上的画幅和想对照的画幅，输入焦距，立即得到视角一致的等效焦距。换算按传感器对角线计算。</p>
 
-  <div class="card">
-    <div class="label">身份证前17位</div>
-    <div class="input-row">
-      <div class="input-wrap">
-        <input
-          type="text"
-          id="idInput"
-          inputmode="numeric"
-          maxlength="17"
-          placeholder="请输入17位数字"
-          autocomplete="off"
-        />
-        <button class="clear-btn" id="clearBtn" title="清空">✕</button>
+  <div class="cols">
+
+    <div class="controls">
+      <section class="block from">
+        <p class="label"><span>输入画幅</span><span class="tnum" id="fromMeta"></span></p>
+        <div class="formats" id="fromRow"></div>
+      </section>
+
+      <section class="block">
+        <p class="label"><span>焦距</span><span class="tnum" id="focalMeta"></span></p>
+        <div class="entry">
+          <input id="focal" type="number" min="1" max="2000" step="0.5" value="50" inputmode="decimal" aria-label="焦距，单位毫米">
+          <span class="unit">mm</span>
+        </div>
+        <input id="slider" type="range" min="8" max="300" step="1" value="50" aria-label="焦距滑块">
+        <div class="chips" id="chips"></div>
+      </section>
+
+      <div class="swapline">
+        <span class="rule"></span>
+        <button id="swap" type="button">↑↓ 对调画幅</button>
+        <span class="rule"></span>
       </div>
-    </div>
-    <div class="char-count" id="charCount">0 / 17</div>
-    <div class="hint" id="hint"></div>
-    <div class="divider"></div>
 
-```
-<div class="result-area" id="resultArea">
-  <div class="label">计算结果</div>
-  <div class="result-grid">
-    <div class="result-box">
-      <div class="result-label">第18位校验码</div>
-      <div class="check-digit" id="checkDigit">-</div>
+      <section class="block to">
+        <p class="label"><span>输出画幅</span><span class="tnum" id="toMeta"></span></p>
+        <div class="formats" id="toRow"></div>
+      </section>
     </div>
-    <div class="result-box">
-      <div class="result-label">完整身份证号</div>
-      <div class="full-id" id="fullId">-</div>
+
+    <div class="readout">
+      <section class="result">
+        <div class="out">
+          <span id="equiv">63.6</span><span class="unit">mm</span>
+        </div>
+        <p class="outcap" id="outcap"></p>
+        <dl class="stats">
+          <div class="stat"><dt>换算系数</dt><dd id="ratio"></dd></div>
+          <div class="stat"><dt>对角线视角</dt><dd id="fov"></dd></div>
+          <div class="stat"><dt>水平视角</dt><dd id="hfov"></dd></div>
+        </dl>
+      </section>
+
+      <section class="block frames">
+        <p class="label"><span>取景范围对照</span><span>按实际尺寸绘制</span></p>
+        <svg id="diagram" viewBox="0 0 480 340" role="img" aria-labelledby="diagTitle">
+          <title id="diagTitle">各画幅传感器尺寸对照图</title>
+        </svg>
+      </section>
+
+      <section class="block">
+        <p class="label"><span>等效光圈</span><span>景深与进光量对照</span></p>
+        <div class="apr">
+          <select id="fstop" aria-label="输入画幅上的光圈值"></select>
+          <span class="arrow">→</span>
+          <span class="val" id="fstopOut"></span>
+          <span class="near" id="fstopNear"></span>
+          <p class="note">同一视角下产生相同景深、相同虚化程度的光圈值。曝光所需的快门与感光度仍按原光圈计算。</p>
+        </div>
+      </section>
     </div>
-  </div>
-  <button class="copy-btn" id="copyBtn" onclick="copyResult()">
-    📋  复制完整号码
-  </button>
-</div>
-```
 
   </div>
+
+  <footer>
+    <b>计算方式</b>：等效焦距 = 原焦距 × (目标画幅对角线 / 原画幅对角线)。<br>
+    <b>取值</b>：中画幅 44×33、全画幅 36×24、APS-C 23.5×15.6（索尼/尼康/富士）、APS-C 22.3×14.9（佳能）。各厂实际有效成像面积略有出入，结果可作对照用。
+  </footer>
+
 </div>
 
 <script>
-const WEIGHTS = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
-const CHECK_MAP = ['1','0','X','9','8','7','6','5','4','3','2'];
+const FORMATS = [
+  { id:'mf',    name:'中画幅',     dim:'44 × 33',     w:44,   h:33   },
+  { id:'ff',    name:'全画幅',     dim:'36 × 24',     w:36,   h:24   },
+  { id:'apsc',  name:'APS-C',      dim:'23.5 × 15.6', w:23.5, h:15.6 },
+  { id:'canon', name:'APS-C 佳能', dim:'22.3 × 14.9', w:22.3, h:14.9 }
+];
+const STOPS = [
+  0.95,1,1.1,1.2,1.4,1.6,1.7,1.8,2,2.2,2.5,2.8,3.2,3.5,4,4.5,5,5.6,6.3,7.1,
+  8,9,10,11,13,14,16,18,20,22,25,29,32,36,40,45,51,57,64
+];
+const PRESETS = [16,23,35,50,63,85,110,150,200];
+const fStop = v => v < 10 ? 'f/' + (Math.round(v * 100) / 100) : 'f/' + Math.round(v);
+const diag = f => Math.hypot(f.w, f.h);
+const byId = id => FORMATS.find(f => f.id === id);
 
-const input = document.getElementById('idInput');
-const charCount = document.getElementById('charCount');
-const hint = document.getElementById('hint');
-const resultArea = document.getElementById('resultArea');
-const checkDigitEl = document.getElementById('checkDigit');
-const fullIdEl = document.getElementById('fullId');
-const clearBtn = document.getElementById('clearBtn');
-const copyBtn = document.getElementById('copyBtn');
+let state = { from:'ff', to:'mf', focal:50, fstop:2 };
 
-let fullNumber = '';
-
-input.addEventListener('input', () => {
-  // Strip non-digits
-  let val = input.value.replace(/\D/g, '');
-  if (val.length > 17) val = val.slice(0, 17);
-  input.value = val;
-
-  const len = val.length;
-  charCount.textContent = `${len} / 17`;
-  charCount.className = 'char-count' + (len === 17 ? ' full' : len > 17 ? ' over' : '');
-
-  clearBtn.classList.toggle('show', len > 0);
-  input.classList.remove('error');
-  hint.classList.remove('show');
-  hint.textContent = '';
-
-  if (len === 17) {
-    compute(val);
-  } else {
-    resultArea.classList.remove('visible');
-  }
-});
-
-clearBtn.addEventListener('click', () => {
-  input.value = '';
-  input.dispatchEvent(new Event('input'));
-  input.focus();
-});
-
-function compute(digits) {
-  let sum = 0;
-  for (let i = 0; i < 17; i++) {
-    sum += parseInt(digits[i]) * WEIGHTS[i];
-  }
-  const remainder = sum % 11;
-  const code = CHECK_MAP[remainder];
-  fullNumber = digits + code;
-
-  checkDigitEl.textContent = code;
-  fullIdEl.innerHTML = digits + '<span class="highlight">' + code + '</span>';
-  resultArea.classList.add('visible');
-}
-
-function copyResult() {
-  if (!fullNumber) return;
-  navigator.clipboard.writeText(fullNumber).then(() => {
-    copyBtn.classList.add('copied');
-    copyBtn.textContent = '✓  已复制到剪贴板';
-    setTimeout(() => {
-      copyBtn.classList.remove('copied');
-      copyBtn.innerHTML = '📋  复制完整号码';
-    }, 1800);
-  }).catch(() => {
-    // Fallback
-    const ta = document.createElement('textarea');
-    ta.value = fullNumber;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    copyBtn.classList.add('copied');
-    copyBtn.textContent = '✓  已复制';
-    setTimeout(() => {
-      copyBtn.classList.remove('copied');
-      copyBtn.innerHTML = '📋  复制完整号码';
-    }, 1800);
+function buildRow(el, key){
+  FORMATS.forEach(f => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'fmt';
+    b.dataset.fid = f.id;
+    b.innerHTML = '<b>' + f.name + '</b><span>' + f.dim + ' mm</span>';
+    b.addEventListener('click', () => { state[key] = f.id; render(); });
+    el.appendChild(b);
   });
 }
+buildRow(document.getElementById('fromRow'), 'from');
+buildRow(document.getElementById('toRow'), 'to');
 
-// Auto-focus
-input.focus();
+const chips = document.getElementById('chips');
+PRESETS.forEach(v => {
+  const c = document.createElement('button');
+  c.type = 'button'; c.className = 'chip'; c.dataset.v = v; c.textContent = v + 'mm';
+  c.addEventListener('click', () => setFocal(v));
+  chips.appendChild(c);
+});
+
+const sel = document.getElementById('fstop');
+[
+  { name:'大光圈', test: s => s < 2.8 },
+  { name:'常用',   test: s => s >= 2.8 && s <= 8 },
+  { name:'小光圈', test: s => s > 8 }
+].forEach(g => {
+  const og = document.createElement('optgroup');
+  og.label = g.name;
+  STOPS.filter(g.test).forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = fStop(s);
+    og.appendChild(o);
+  });
+  sel.appendChild(og);
+});
+sel.value = state.fstop;
+sel.addEventListener('change', () => { state.fstop = parseFloat(sel.value); render(); });
+
+const focalInput = document.getElementById('focal');
+const slider = document.getElementById('slider');
+
+function setFocal(v){
+  state.focal = v;
+  focalInput.value = v;
+  slider.value = Math.min(300, Math.max(8, v));
+  render();
+}
+focalInput.addEventListener('input', () => {
+  const v = parseFloat(focalInput.value);
+  if (!isNaN(v) && v > 0){ state.focal = v; slider.value = Math.min(300, Math.max(8, v)); render(); }
+});
+slider.addEventListener('input', () => {
+  state.focal = parseFloat(slider.value);
+  focalInput.value = slider.value;
+  render();
+});
+document.getElementById('swap').addEventListener('click', () => {
+  const t = state.from; state.from = state.to; state.to = t; render();
+});
+
+const fmtNum = n => {
+  const r = Math.round(n * 10) / 10;
+  return Number.isInteger(r) ? String(r) : r.toFixed(1);
+};
+
+function drawDiagram(from, to){
+  const svg = document.getElementById('diagram');
+  const NS = 'http://www.w3.org/2000/svg';
+  svg.innerHTML = '<title id="diagTitle">各画幅传感器尺寸对照图</title>';
+  const k = 9, cx = 240, cy = 172;
+  FORMATS.slice().sort((a,b) => b.w - a.w).forEach(f => {
+    const w = f.w * k, h = f.h * k;
+    const isFrom = f.id === from.id, isTo = f.id === to.id;
+    const r = document.createElementNS(NS,'rect');
+    r.setAttribute('x', cx - w/2); r.setAttribute('y', cy - h/2);
+    r.setAttribute('width', w); r.setAttribute('height', h);
+    r.setAttribute('rx', 2);
+    r.setAttribute('fill', isFrom ? 'rgba(210,69,47,.13)' : 'none');
+    r.setAttribute('stroke', isFrom ? '#D2452F' : isTo ? '#6FA8C7' : '#2B3433');
+    r.setAttribute('stroke-width', isFrom || isTo ? 1.8 : 1);
+    if (isTo && !isFrom) r.setAttribute('stroke-dasharray','5 4');
+    svg.appendChild(r);
+
+    const t = document.createElementNS(NS,'text');
+    t.setAttribute('x', cx - w/2 + 8);
+    t.setAttribute('y', cy - h/2 + 18);
+    t.setAttribute('font-size', '13');
+    t.setAttribute('font-family', 'ui-monospace, Menlo, Consolas, monospace');
+    t.setAttribute('fill', isFrom ? '#D2452F' : isTo ? '#6FA8C7' : '#5C6664');
+    t.textContent = f.name;
+    svg.appendChild(t);
+  });
+  const legend = document.createElementNS(NS,'text');
+  legend.setAttribute('x', 6); legend.setAttribute('y', 330);
+  legend.setAttribute('font-size', '13');
+  legend.setAttribute('font-family', 'ui-monospace, Menlo, Consolas, monospace');
+  legend.setAttribute('fill', '#5C6664');
+  legend.textContent = '填充 = 输入画幅 · 虚线 = 输出画幅';
+  svg.appendChild(legend);
+}
+
+function render(){
+  const from = byId(state.from), to = byId(state.to);
+  document.querySelectorAll('#fromRow .fmt').forEach(b => b.setAttribute('aria-pressed', b.dataset.fid === state.from));
+  document.querySelectorAll('#toRow .fmt').forEach(b => b.setAttribute('aria-pressed', b.dataset.fid === state.to));
+  document.querySelectorAll('#chips .chip').forEach(c => c.setAttribute('aria-pressed', parseFloat(c.dataset.v) === state.focal));
+
+  const ratio = diag(to) / diag(from);
+  const equiv = state.focal * ratio;
+  const deg = (d, f) => 2 * Math.atan(d / (2 * f)) * 180 / Math.PI;
+
+  document.getElementById('equiv').textContent = fmtNum(equiv);
+  document.getElementById('ratio').innerHTML = ratio.toFixed(3) + '<small>×</small>';
+  document.getElementById('fov').innerHTML = deg(diag(from), state.focal).toFixed(1) + '<small>°</small>';
+  document.getElementById('hfov').innerHTML = deg(from.w, state.focal).toFixed(1) + '<small>°</small>';
+  document.getElementById('outcap').textContent =
+    from.name + ' ' + fmtNum(state.focal) + 'mm 的视角，相当于 ' + to.name + ' 上的 ' + fmtNum(equiv) + 'mm';
+  document.getElementById('fromMeta').textContent = '对角线 ' + diag(from).toFixed(1) + ' mm';
+  document.getElementById('toMeta').textContent = '对角线 ' + diag(to).toFixed(1) + ' mm';
+  document.getElementById('focalMeta').textContent = '滑块范围 8 至 300mm，可直接输入更大值';
+
+  const eqStop = state.fstop * ratio;
+  const nearest = STOPS.reduce((a,b) =>
+    Math.abs(Math.log(b) - Math.log(eqStop)) < Math.abs(Math.log(a) - Math.log(eqStop)) ? b : a);
+  document.getElementById('fstopOut').textContent = eqStop < 10 ? 'f/' + eqStop.toFixed(2) : 'f/' + eqStop.toFixed(1);
+  document.getElementById('fstopNear').textContent = '最接近 ' + fStop(nearest);
+
+  drawDiagram(from, to);
+}
+render();
 </script>
-
 </body>
 </html>
