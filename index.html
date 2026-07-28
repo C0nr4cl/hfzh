@@ -3,13 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0E1211">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#E9EBE8">
 <title>焦距换算</title>
 <style>
   :root{
-    --ink:#0E1211; --panel:#171D1C; --panel-2:#1E2625; --line:#2A3332; --line-2:#3B4745;
-    --text:#EAE8E2; --dim:#8B9491; --dim-2:#616C6A; --mark:#D2452F; --scale:#6FA8C7; --r:8px;
+    --paper:#E9EBE8;
+    --card:#FCFDFB;
+    --card-2:#F2F4F0;
+    --ink:#15100C;
+    --muted:#6C7370;
+    --faint:#9AA19E;
+    --hair:#D3D7D2;
+    --hair-2:#BFC5BF;
+    --in:#7A2E96;
+    --in-wash:rgba(122,46,150,.10);
+    --out:#0B6E77;
+    --out-wash:rgba(11,110,119,.09);
+    --r:10px;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
     --cond:"Avenir Next Condensed","Roboto Condensed","Segoe UI Variable Display","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
@@ -17,146 +28,194 @@
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
-    margin:0;background:var(--ink);color:var(--text);font-family:var(--sans);line-height:1.6;
+    margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;
     -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
-    padding:clamp(24px,6vw,48px) clamp(16px,4vw,24px) calc(56px + env(safe-area-inset-bottom));
-    background-image:radial-gradient(900px 420px at 50% -240px,rgba(111,168,199,.08),transparent 70%);
+    padding:clamp(20px,4vw,40px) clamp(16px,4vw,32px) calc(60px + env(safe-area-inset-bottom));
   }
-  .wrap{max-width:680px;margin:0 auto}
-  :focus-visible{outline:2px solid var(--scale);outline-offset:2px}
-  .tnum{font-variant-numeric:tabular-nums}
+  .wrap{max-width:1080px;margin:0 auto}
+  :focus-visible{outline:2px solid var(--out);outline-offset:2px}
+  .mono{font-family:var(--mono)}
+  .num{font-variant-numeric:tabular-nums}
 
-  h1{font-family:var(--cond);font-weight:600;font-size:clamp(26px,5.6vw,34px);letter-spacing:.05em;margin:0}
-  .sub{color:var(--dim);font-size:13px;margin:6px 0 clamp(20px,5vw,30px)}
+  /* 顶栏 */
+  .bar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding-bottom:14px;border-bottom:1px solid var(--hair-2);margin-bottom:clamp(16px,3vw,24px);
+  }
+  h1{font-family:var(--cond);font-weight:600;font-size:clamp(23px,4.4vw,30px);letter-spacing:.06em;margin:0}
+  .tagline{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:3px 0 0}
+  .basisbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .basisbox > span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .seg{display:inline-flex;background:var(--card-2);border:1px solid var(--hair);border-radius:999px;padding:3px}
+  .seg button{
+    appearance:none;border:0;background:transparent;color:var(--muted);cursor:pointer;border-radius:999px;
+    font-family:var(--mono);font-size:11.5px;padding:6px 13px;min-height:32px;transition:background .15s,color .15s;
+  }
+  .seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  @media (hover:hover){.seg button:hover{color:var(--ink)}}
 
-  /* 主换算区 */
-  .deck{display:grid;gap:10px;align-items:stretch}
-  @media (min-width:660px){.deck{grid-template-columns:1fr 52px 1fr;gap:0}}
-
-  .side{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:16px 16px 14px}
-  .side.out{background:linear-gradient(180deg,#1C2426,#151B1A)}
-  .cap{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim-2);margin:0 0 10px}
-  .side.in .cap{color:var(--mark)}
-  .side.out .cap{color:var(--scale)}
-
+  /* 换算台 */
+  .deck{display:grid;gap:10px}
+  @media (min-width:840px){.deck{grid-template-columns:1fr 64px 1fr;gap:0;align-items:stretch}}
+  .side{
+    background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:clamp(15px,2.4vw,20px);
+    display:flex;flex-direction:column;
+  }
+  .side.in{border-top:3px solid var(--in)}
+  .side.out{border-top:3px solid var(--out);background:linear-gradient(180deg,#F8FBFA,#FCFDFB)}
+  .cap{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 10px}
+  .in .cap{color:var(--in)}
+  .out .cap{color:var(--out)}
   select.fmt{
-    width:100%;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--r);
+    width:100%;background:var(--card-2);color:var(--ink);border:1px solid var(--hair);border-radius:8px;
     font-family:var(--sans);font-size:15px;padding:11px 12px;min-height:46px;cursor:pointer;
   }
-  .num{display:flex;align-items:baseline;gap:8px;margin-top:14px}
+  .readings{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;margin-top:16px;align-items:end}
+  .rd{min-width:0}
+  .rd .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 4px}
+  .big{
+    font-family:var(--cond);font-weight:600;font-size:clamp(38px,7.6vw,50px);line-height:1;
+    font-variant-numeric:tabular-nums;letter-spacing:.01em;display:flex;align-items:baseline;gap:6px;
+  }
+  .big .u{font-size:17px;font-weight:500;color:var(--muted)}
+  .out .big{color:var(--out)}
   #focal{
-    width:100%;min-width:0;background:transparent;border:0;color:var(--text);font-family:var(--cond);font-weight:600;
-    font-size:clamp(44px,11vw,58px);line-height:1;padding:0;font-variant-numeric:tabular-nums;letter-spacing:.01em;
+    width:100%;min-width:0;background:transparent;border:0;padding:0;color:var(--ink);
+    font:inherit;font-variant-numeric:tabular-nums;
   }
   #focal:focus{outline:0}
   #focal::-webkit-outer-spin-button,#focal::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   #focal[type=number]{-moz-appearance:textfield}
-  #equiv{font-family:var(--cond);font-weight:600;font-size:clamp(44px,11vw,58px);line-height:1;color:var(--scale);font-variant-numeric:tabular-nums}
-  .unit{font-family:var(--cond);font-size:20px;color:var(--dim)}
-  .hint{font-family:var(--mono);font-size:10.5px;color:var(--dim-2);margin:8px 0 0;height:16px}
-
-  .mid{display:flex;align-items:center;justify-content:center;padding:2px 0}
-  #swap{
-    cursor:pointer;width:44px;height:44px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);
-    color:var(--dim);font-size:17px;line-height:1;transition:color .16s,border-color .16s,transform .2s;
+  select.ap{
+    width:100%;background:var(--card-2);border:1px solid var(--hair);border-radius:8px;color:var(--ink);
+    font-family:var(--cond);font-weight:600;font-size:clamp(22px,4.4vw,27px);padding:6px 8px;min-height:46px;cursor:pointer;
+    font-variant-numeric:tabular-nums;
   }
-  @media (hover:hover){#swap:hover{color:var(--text);border-color:var(--line-2);transform:rotate(180deg)}}
-  @media (max-width:659px){#swap{transform:rotate(90deg)}}
-  @media (max-width:659px) and (hover:hover){#swap:hover{transform:rotate(270deg)}}
+  .apout{font-family:var(--cond);font-weight:600;font-size:clamp(26px,5vw,33px);color:var(--out);font-variant-numeric:tabular-nums;line-height:1.3}
+  .foot{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--hair)}
+  .mid{display:flex;align-items:center;justify-content:center}
+  #swap{
+    cursor:pointer;width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--hair-2);
+    color:var(--muted);font-size:17px;line-height:1;transition:color .16s,border-color .16s,transform .25s;
+  }
+  @media (hover:hover){#swap:hover{color:var(--ink);border-color:var(--ink);transform:rotate(180deg)}}
+  @media (max-width:839px){#swap{transform:rotate(90deg)}}
+  @media (max-width:839px) and (hover:hover){#swap:hover{transform:rotate(270deg)}}
 
   /* 焦距调节 */
-  .tune{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:14px 16px 16px;margin-top:10px}
-  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;height:24px;margin:0}
-  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line);border-radius:2px}
-  input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:2px}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-10px;border-radius:50%;background:var(--mark);border:0;cursor:pointer}
-  input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:var(--mark);cursor:pointer}
-  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .tune{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:14px 18px 16px;margin-top:10px;
+        display:grid;gap:12px;align-items:center}
+  @media (min-width:840px){.tune{grid-template-columns:minmax(0,1fr) auto;gap:22px}}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;height:26px;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--hair-2);border-radius:3px}
+  input[type=range]::-moz-range-track{height:3px;background:var(--hair-2);border-radius:3px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-10px;border-radius:50%;
+    background:var(--in);border:3px solid var(--card);box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--in);
+    border:3px solid var(--card);box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:pointer}
+  .presets{display:flex;flex-wrap:wrap;gap:6px}
   .chip{
-    cursor:pointer;background:transparent;border:1px solid var(--line);border-radius:999px;color:var(--dim);
-    font-family:var(--mono);font-size:12px;padding:6px 12px;min-height:34px;transition:color .15s,border-color .15s;
+    cursor:pointer;background:var(--card-2);border:1px solid var(--hair);border-radius:999px;color:var(--muted);
+    font-family:var(--mono);font-size:12px;padding:6px 12px;min-height:34px;transition:color .15s,border-color .15s,background .15s;
   }
-  @media (hover:hover){.chip:hover{color:var(--text);border-color:var(--line-2)}}
-  .chip[aria-pressed="true"]{color:var(--text);border-color:var(--line-2);background:var(--panel-2)}
+  @media (hover:hover){.chip:hover{color:var(--ink);border-color:var(--hair-2)}}
+  .chip[aria-pressed="true"]{background:var(--in);border-color:var(--in);color:#fff}
 
-  /* 摘要 */
-  .summary{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin:14px 2px 0;font-size:13px;color:var(--dim)}
-  .summary b{font-family:var(--cond);font-size:17px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;margin-left:5px}
-  .summary .grow{flex:1}
-  .ghost{
-    cursor:pointer;background:transparent;border:1px solid var(--line);border-radius:999px;color:var(--dim);
-    font-family:var(--mono);font-size:11px;padding:6px 12px;min-height:32px;transition:color .16s,border-color .16s;
-  }
-  @media (hover:hover){.ghost:hover{color:var(--text);border-color:var(--line-2)}}
-
-  /* 图示 */
-  .frames{margin-top:14px;border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:14px 16px 10px}
+  /* 图示与读数 */
+  .lower{display:grid;gap:10px;margin-top:10px}
+  @media (min-width:840px){.lower{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+  .panel{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:clamp(14px,2.2vw,18px)}
+  .ptitle{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 12px;
+          display:flex;justify-content:space-between;align-items:center;gap:10px}
   .frames svg{width:100%;height:auto;display:block}
-  .legend{display:flex;gap:16px;font-family:var(--mono);font-size:10.5px;color:var(--dim-2);margin:6px 0 0;flex-wrap:wrap}
-  .legend i{display:inline-block;width:14px;height:8px;margin-right:6px;vertical-align:1px;border-radius:2px}
-  .legend .a{background:rgba(210,69,47,.25);border:1px solid var(--mark)}
-  .legend .b{border:1px dashed var(--scale)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin:8px 0 0}
+  .legend i{display:inline-block;width:14px;height:9px;margin-right:6px;vertical-align:1px;border-radius:2px}
+  .legend .a{background:var(--in-wash);border:1px solid var(--in)}
+  .legend .b{border:1px dashed var(--out)}
+  dl.metrics{margin:0;display:grid;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:8px;overflow:hidden}
+  dl.metrics > div{background:var(--card);padding:11px 13px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  dl.metrics dt{font-size:12.5px;color:var(--muted);margin:0}
+  dl.metrics dd{margin:0;font-family:var(--cond);font-weight:600;font-size:19px;font-variant-numeric:tabular-nums}
+  .copy{
+    width:100%;margin-top:12px;cursor:pointer;background:var(--ink);color:#F7F8F6;border:1px solid var(--ink);border-radius:999px;
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;padding:11px 14px;min-height:44px;transition:opacity .16s;
+  }
+  @media (hover:hover){.copy:hover{opacity:.86}}
 
   /* 高级 */
-  details{margin-top:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+  details{margin-top:10px;background:var(--card);border:1px solid var(--hair);border-radius:var(--r)}
   summary{
-    cursor:pointer;list-style:none;padding:14px 16px;font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between;align-items:center;min-height:48px;
+    cursor:pointer;list-style:none;padding:14px 18px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center;min-height:48px;
   }
   summary::-webkit-details-marker{display:none}
-  summary::after{content:'+';font-size:16px;color:var(--dim-2)}
+  summary::after{content:'+';font-size:16px;color:var(--faint)}
+  details[open] summary{border-bottom:1px solid var(--hair);color:var(--ink)}
   details[open] summary::after{content:'–'}
-  details[open] summary{border-bottom:1px solid var(--line);color:var(--text)}
-  .adv{padding:4px 16px 18px}
-  .arow{padding:16px 0;border-bottom:1px solid var(--line)}
-  .arow:last-child{border-bottom:0;padding-bottom:2px}
-  .atitle{font-size:13.5px;color:var(--text);margin:0 0 3px}
-  .adesc{font-size:12px;color:var(--dim-2);margin:0 0 11px;line-height:1.7}
-  .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--panel-2);flex-wrap:wrap}
-  .seg button{
-    appearance:none;border:0;background:transparent;color:var(--dim);cursor:pointer;border-radius:999px;
-    font-family:var(--mono);font-size:11.5px;padding:7px 13px;min-height:34px;transition:background .15s,color .15s;
-  }
-  .seg button[aria-pressed="true"]{background:#26302F;color:var(--text)}
+  .adv{padding:6px clamp(14px,2.2vw,18px) 18px;display:grid;gap:0}
+  @media (min-width:840px){.adv{grid-template-columns:1fr 1fr;column-gap:28px}}
+  .arow{padding:16px 0;border-bottom:1px solid var(--hair)}
+  .arow.wide{grid-column:1/-1}
+  .atitle{font-size:13.5px;font-weight:500;margin:0 0 3px}
+  .adesc{font-size:12px;color:var(--faint);margin:0 0 11px;line-height:1.7}
   .pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .f{display:flex;flex-direction:column;gap:5px;min-width:0}
-  .f label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim-2)}
+  .f label{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
   .f select,.f input{
-    background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--r);width:100%;
+    background:var(--card-2);color:var(--ink);border:1px solid var(--hair);border-radius:8px;width:100%;
     font-family:var(--cond);font-size:16px;padding:9px 11px;min-height:44px;font-variant-numeric:tabular-nums;
   }
-  .f input[readonly]{color:var(--scale);border-style:dashed}
+  .f input[readonly]{color:var(--out);border-style:dashed;background:transparent}
   .f select{cursor:pointer}
-
   table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-  th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--hair);white-space:nowrap}
   th:first-child,td:first-child{text-align:left}
-  th{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--dim-2);text-transform:uppercase;font-weight:400}
+  th{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase;font-weight:400}
   td{font-family:var(--cond);font-size:16px}
   td.name{font-family:var(--sans);font-size:13px}
-  tr.isFrom td{color:var(--mark)}
-  tr.isTo td{color:var(--scale)}
+  tr.isFrom td{color:var(--in);font-weight:600}
+  tr.isTo td{color:var(--out);font-weight:600}
   tbody tr:last-child td{border-bottom:0}
   @media (max-width:520px){.hidesm{display:none}}
 
-  footer{color:var(--dim-2);font-size:11.5px;line-height:1.9;margin-top:20px}
-  kbd{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);border-radius:3px;padding:1px 5px}
-
+  footer{color:var(--faint);font-size:11.5px;line-height:1.9;margin-top:18px}
+  kbd{font-family:var(--mono);font-size:10.5px;border:1px solid var(--hair-2);border-radius:3px;padding:1px 5px;background:var(--card)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <h1>焦距换算</h1>
-  <p class="sub">选好两个画幅，输入焦距，直接得到视角一致的等效值。</p>
+  <div class="bar">
+    <div>
+      <h1>焦距换算</h1>
+      <p class="tagline">Focal Length &amp; Aperture Equivalence</p>
+    </div>
+    <div class="basisbox">
+      <span>换算基准</span>
+      <div class="seg" id="basisSeg" role="group" aria-label="换算基准">
+        <button type="button" data-b="diag">对角线</button>
+        <button type="button" data-b="w">水平边</button>
+        <button type="button" data-b="h">垂直边</button>
+      </div>
+    </div>
+  </div>
 
   <div class="deck">
     <section class="side in">
       <p class="cap">手上的画幅</p>
       <select class="fmt" id="fromSel" aria-label="输入画幅"></select>
-      <div class="num"><input id="focal" type="number" min="1" max="2000" step="0.5" value="50" inputmode="decimal" aria-label="焦距，单位毫米"><span class="unit">mm</span></div>
-      <p class="hint" id="fromHint"></p>
+      <div class="readings">
+        <div class="rd">
+          <p class="k">焦距</p>
+          <div class="big"><input id="focal" type="number" min="1" max="2000" step="0.5" value="50" inputmode="decimal" aria-label="焦距，单位毫米"><span class="u">mm</span></div>
+        </div>
+        <div class="rd">
+          <p class="k">光圈</p>
+          <select class="ap" id="fstop" aria-label="光圈"></select>
+        </div>
+      </div>
+      <p class="foot" id="fromHint"></p>
     </section>
 
     <div class="mid"><button id="swap" type="button" aria-label="对调两个画幅" title="对调画幅（S）">⇄</button></div>
@@ -164,8 +223,17 @@
     <section class="side out">
       <p class="cap">对照的画幅</p>
       <select class="fmt" id="toSel" aria-label="输出画幅"></select>
-      <div class="num"><span id="equiv"></span><span class="unit">mm</span></div>
-      <p class="hint" id="toHint"></p>
+      <div class="readings">
+        <div class="rd">
+          <p class="k">等效焦距</p>
+          <div class="big"><span id="equiv"></span><span class="u">mm</span></div>
+        </div>
+        <div class="rd">
+          <p class="k">等效光圈</p>
+          <div class="apout" id="fstopOut"></div>
+        </div>
+      </div>
+      <p class="foot" id="toHint"></p>
     </section>
   </div>
 
@@ -174,43 +242,36 @@
     <div class="presets" id="presets"></div>
   </div>
 
-  <div class="summary">
-    <span>换算系数<b id="ratio"></b></span>
-    <span>对角线视角<b id="fov"></b></span>
-    <span class="grow"></span>
-    <button class="ghost" id="copy" type="button">复制</button>
-  </div>
+  <div class="lower">
+    <section class="panel frames">
+      <p class="ptitle"><span>画幅对照</span><span id="modeName"></span></p>
+      <svg id="diagram" viewBox="0 0 480 236" role="img" aria-label="两个画幅的对照图"></svg>
+      <p class="legend">
+        <span><i class="a"></i><span id="lgA"></span></span>
+        <span><i class="b"></i><span id="lgB"></span></span>
+      </p>
+    </section>
 
-  <section class="frames">
-    <svg id="diagram" viewBox="0 0 480 250" role="img" aria-label="两个画幅的对照图"></svg>
-    <p class="legend">
-      <span><i class="a"></i><span id="lgA"></span></span>
-      <span><i class="b"></i><span id="lgB"></span></span>
-      <span class="grow"></span>
-      <span id="lgNote"></span>
-    </p>
-  </section>
+    <section class="panel">
+      <p class="ptitle"><span>读数</span><span id="basisTag"></span></p>
+      <dl class="metrics">
+        <div><dt>换算系数</dt><dd id="ratio"></dd></div>
+        <div><dt>光圈差</dt><dd id="stopDiff"></dd></div>
+        <div><dt>对角线视角</dt><dd id="fovD"></dd></div>
+        <div><dt>水平视角</dt><dd id="fovW"></dd></div>
+      </dl>
+      <button class="copy" id="copy" type="button">复制换算结果</button>
+    </section>
+  </div>
 
   <details id="adv">
     <summary>高级选项</summary>
     <div class="adv">
 
       <div class="arow">
-        <p class="atitle">换算基准</p>
-        <p class="adesc">两个画幅比例不同时，对齐哪条边会影响结果。对角线保留整体视角，水平边保留横向构图，垂直边保留纵向构图。</p>
-        <div class="seg" id="basisSeg" role="group" aria-label="换算基准">
-          <button type="button" data-b="diag">对角线</button>
-          <button type="button" data-b="w">水平边</button>
-          <button type="button" data-b="h">垂直边</button>
-        </div>
-      </div>
-
-      <div class="arow">
-        <p class="atitle">等效光圈与感光度</p>
-        <p class="adesc">同一视角下得到相同景深与相同噪点表现所需的数值。实际曝光仍按原光圈与原 ISO 计算。</p>
+        <p class="atitle">等效感光度</p>
+        <p class="adesc">同一视角、同一景深下得到相同噪点表现所需的 ISO。实际曝光仍按原光圈与原 ISO 计算。</p>
         <div class="pair">
-          <div class="f"><label for="fstop">原光圈</label><select id="fstop"></select></div>
-          <div class="f"><label for="fstopOut">等效光圈</label><input id="fstopOut" readonly tabindex="-1"></div>
           <div class="f"><label for="iso">原 ISO</label><select id="iso"></select></div>
           <div class="f"><label for="isoOut">等效 ISO</label><input id="isoOut" readonly tabindex="-1"></div>
         </div>
@@ -227,7 +288,7 @@
 
       <div class="arow">
         <p class="atitle">自定义画幅</p>
-        <p class="adesc">填好尺寸后，在上方两个下拉框中选择自定义画幅即可参与换算。</p>
+        <p class="adesc">填好尺寸后，在上方任一下拉框中选择自定义画幅即可参与换算。</p>
         <div class="pair">
           <div class="f"><label for="cw">宽 mm</label><input id="cw" type="number" min="1" max="300" step="0.1" value="60" inputmode="decimal"></div>
           <div class="f"><label for="ch">高 mm</label><input id="ch" type="number" min="1" max="300" step="0.1" value="45" inputmode="decimal"></div>
@@ -243,11 +304,11 @@
         </div>
       </div>
 
-      <div class="arow">
+      <div class="arow wide">
         <p class="atitle">全画幅对照</p>
         <p class="adesc" id="tableMeta"></p>
         <table>
-          <thead><tr><th>画幅</th><th class="hidesm">尺寸</th><th>系数</th><th>等效焦距</th></tr></thead>
+          <thead><tr><th>画幅</th><th class="hidesm">尺寸</th><th>系数</th><th>等效焦距</th><th>等效光圈</th></tr></thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
@@ -256,7 +317,8 @@
   </details>
 
   <footer>
-    等效焦距 = 原焦距 × (对照画幅基准边 / 手上画幅基准边)。<kbd>↑</kbd><kbd>↓</kbd> 微调焦距，<kbd>S</kbd> 对调画幅，参数会写入网址，可收藏或转发。各厂标称的有效成像面积略有出入，结果可作对照用。
+    等效焦距 = 原焦距 × 系数，等效光圈 = 原光圈 × 系数，系数 = 对照画幅基准边 / 手上画幅基准边。等效光圈用于比较景深与虚化程度，曝光不受影响。
+    <kbd>↑</kbd><kbd>↓</kbd> 微调焦距，<kbd>S</kbd> 对调画幅，参数会写入网址，可收藏或转发。各厂标称的有效成像面积略有出入，结果可作对照用。
   </footer>
 
 </div>
@@ -292,13 +354,13 @@ const fmtNum = n => { const r = Math.round(n*10)/10; return Number.isInteger(r) 
 const diagOf = f => Math.hypot(f.w, f.h);
 const basisOf = (f,b) => b === 'w' ? f.w : b === 'h' ? f.h : diagOf(f);
 const basisName = { diag:'对角线', w:'水平边', h:'垂直边' };
+const modeName = { size:'实际尺寸', shape:'等效后构图' };
 function fmtOf(id){
   const f = FORMATS.find(x => x.id === id);
   return f.id === 'custom' ? { ...f, w:state.cw, h:state.ch, name:'自定义 ' + state.cw + '×' + state.ch } : f;
 }
 
-/* 下拉框 */
-[['fromSel','from'],['toSel','to']].forEach(([elId, key]) => {
+[['fromSel','from'],['toSel','to']].forEach(([elId,key]) => {
   const el = $(elId);
   [...new Set(FORMATS.map(f => f.g))].forEach(g => {
     const og = document.createElement('optgroup'); og.label = g;
@@ -310,12 +372,11 @@ function fmtOf(id){
   el.addEventListener('change', () => { state[key] = el.value; render(); });
 });
 
-const presetRow = $('presets');
 PRESETS.forEach(v => {
   const c = document.createElement('button');
   c.type = 'button'; c.className = 'chip'; c.dataset.v = v; c.textContent = v + 'mm';
   c.addEventListener('click', () => { state.focal = v; render(); });
-  presetRow.appendChild(c);
+  $('presets').appendChild(c);
 });
 
 [{n:'大光圈',t:s=>s<2.8},{n:'常用',t:s=>s>=2.8&&s<=8},{n:'小光圈',t:s=>s>8}].forEach(g => {
@@ -358,9 +419,10 @@ document.addEventListener('keydown', e => {
 
 $('copy').addEventListener('click', async e => {
   const from = fmtOf(state.from), to = fmtOf(state.to);
-  const ratio = basisOf(to, state.basis) / basisOf(from, state.basis);
-  const text = from.name + ' ' + fmtNum(state.focal) + 'mm → ' + to.name + ' ' + fmtNum(state.focal*ratio) +
-               'mm（系数 ' + ratio.toFixed(3) + '，' + basisName[state.basis] + '基准）';
+  const r = basisOf(to, state.basis) / basisOf(from, state.basis);
+  const text = from.name + ' ' + fmtNum(state.focal) + 'mm ' + fStop(state.fstop) + ' → ' +
+               to.name + ' ' + fmtNum(state.focal*r) + 'mm f/' + (state.fstop*r < 10 ? (state.fstop*r).toFixed(2) : (state.fstop*r).toFixed(1)) +
+               '（系数 ' + r.toFixed(3) + '，' + basisName[state.basis] + '基准）';
   try { await navigator.clipboard.writeText(text); }
   catch (err) {
     const ta = document.createElement('textarea');
@@ -370,19 +432,18 @@ $('copy').addEventListener('click', async e => {
     ta.remove();
   }
   const b = e.target, old = b.textContent;
-  b.textContent = '已复制'; setTimeout(() => { b.textContent = old; }, 1400);
+  b.textContent = '已复制到剪贴板'; setTimeout(() => { b.textContent = old; }, 1500);
 });
 
-/* 图示 */
 function drawDiagram(from, to){
   const svg = $('diagram'), NS = 'http://www.w3.org/2000/svg';
   svg.innerHTML = '';
-  const CX = 240, CY = 122, BW = 448, BH = 210;
+  const CX = 240, CY = 116, BW = 452, BH = 200;
   const mk = (t,a) => { const e = document.createElementNS(NS,t); for (const k in a) e.setAttribute(k,a[k]); return e; };
   const rect = (w,h,kind) => {
     const r = mk('rect', { x:CX-w/2, y:CY-h/2, width:w, height:h, rx:3,
-      fill: kind==='from' ? 'rgba(210,69,47,.16)' : 'none',
-      stroke: kind==='from' ? '#D2452F' : kind==='to' ? '#6FA8C7' : '#28312F',
+      fill: kind==='from' ? 'rgba(122,46,150,.10)' : 'none',
+      stroke: kind==='from' ? '#7A2E96' : kind==='to' ? '#0B6E77' : '#CDD2CC',
       'stroke-width': kind==='other' ? 1 : 1.8 });
     if (kind==='to') r.setAttribute('stroke-dasharray','6 4');
     svg.appendChild(r);
@@ -393,13 +454,11 @@ function drawDiagram(from, to){
       .filter(f => f.id===from.id || f.id===to.id || (f.id!=='custom' && f.w*k<=BW && f.h*k<=BH))
       .sort((a,b) => b.w*b.h - a.w*a.h)
       .forEach(f => rect(f.w*k, f.h*k, f.id===from.id ? 'from' : f.id===to.id ? 'to' : 'other'));
-    $('lgNote').textContent = '灰线为其余画幅，按真实大小等比绘制';
   } else {
     const T = 300, s1 = T/basisOf(from,state.basis), s2 = T/basisOf(to,state.basis);
     const k = Math.min(BW/Math.max(from.w*s1,to.w*s2), BH/Math.max(from.h*s1,to.h*s2));
     rect(from.w*s1*k, from.h*s1*k, 'from');
     rect(to.w*s2*k, to.h*s2*k, 'to');
-    $('lgNote').textContent = '换到等效焦距后，两者' + basisName[state.basis] + '一致';
   }
   $('lgA').textContent = from.name;
   $('lgB').textContent = to.name;
@@ -408,8 +467,8 @@ function drawDiagram(from, to){
 function render(syncFocal = true){
   const from = fmtOf(state.from), to = fmtOf(state.to), b = state.basis;
   const ratio = basisOf(to,b) / basisOf(from,b);
-  const equiv = state.focal * ratio;
   const deg = (d,f) => 2 * Math.atan(d/(2*f)) * 180/Math.PI;
+  const apStr = v => 'f/' + (v < 10 ? v.toFixed(2) : v.toFixed(1));
 
   $('fromSel').value = state.from; $('toSel').value = state.to;
   $('fstop').value = state.fstop; $('iso').value = state.iso;
@@ -419,28 +478,34 @@ function render(syncFocal = true){
   document.querySelectorAll('#basisSeg button').forEach(x => x.setAttribute('aria-pressed', x.dataset.b === b));
   document.querySelectorAll('#modeSeg button').forEach(x => x.setAttribute('aria-pressed', x.dataset.m === state.mode));
 
-  $('equiv').textContent = fmtNum(equiv);
-  $('fromHint').textContent = from.w + '×' + from.h + 'mm · 对角线 ' + diagOf(from).toFixed(1);
-  $('toHint').textContent = to.w + '×' + to.h + 'mm · 对角线 ' + diagOf(to).toFixed(1);
-  $('ratio').textContent = ratio.toFixed(3) + '×';
-  $('fov').textContent = deg(diagOf(from), state.focal).toFixed(1) + '°';
-
   const eqStop = state.fstop * ratio;
-  const near = STOPS.reduce((a,x) => Math.abs(Math.log(x)-Math.log(eqStop)) < Math.abs(Math.log(a)-Math.log(eqStop)) ? x : a);
-  $('fstopOut').value = 'f/' + (eqStop<10 ? eqStop.toFixed(2) : eqStop.toFixed(1)) + '  ≈ ' + fStop(near);
+  const nearStop = STOPS.reduce((a,x) => Math.abs(Math.log(x)-Math.log(eqStop)) < Math.abs(Math.log(a)-Math.log(eqStop)) ? x : a);
+
+  $('equiv').textContent = fmtNum(state.focal * ratio);
+  $('fstopOut').textContent = apStr(eqStop);
+  $('fromHint').textContent = from.w + ' × ' + from.h + ' mm　对角线 ' + diagOf(from).toFixed(1) + ' mm';
+  $('toHint').textContent = to.w + ' × ' + to.h + ' mm　最接近的档位 ' + fStop(nearStop);
+  $('ratio').textContent = ratio.toFixed(3) + '×';
+  $('stopDiff').textContent = (ratio >= 1 ? '+' : '') + (2*Math.log2(ratio)).toFixed(2) + ' EV';
+  $('fovD').textContent = deg(diagOf(from), state.focal).toFixed(1) + '°';
+  $('fovW').textContent = deg(from.w, state.focal).toFixed(1) + '°';
+  $('basisTag').textContent = basisName[b] + '基准';
+  $('modeName').textContent = modeName[state.mode];
+
   const eqIso = state.iso * ratio * ratio;
   const nearIso = ISOS.reduce((a,x) => Math.abs(Math.log(x)-Math.log(eqIso)) < Math.abs(Math.log(a)-Math.log(eqIso)) ? x : a);
-  $('isoOut').value = Math.round(eqIso) + '  ≈ ' + nearIso;
+  $('isoOut').value = Math.round(eqIso) + '　≈ ' + nearIso;
   $('cover').value = (state.dist*from.w/state.focal).toFixed(2) + ' × ' + (state.dist*from.h/state.focal).toFixed(2) + ' m';
 
-  $('tableMeta').textContent = from.name + ' 上的 ' + fmtNum(state.focal) + 'mm 换到各画幅，' + basisName[b] + '基准。';
+  $('tableMeta').textContent = from.name + ' 上的 ' + fmtNum(state.focal) + 'mm ' + fStop(state.fstop) +
+                               ' 换到各画幅，' + basisName[b] + '基准。';
   const tb = $('tbody'); tb.innerHTML = '';
   FORMATS.forEach(f0 => {
     const f = fmtOf(f0.id), r = basisOf(f,b) / basisOf(from,b);
     const tr = document.createElement('tr');
     if (f0.id === state.from) tr.className = 'isFrom'; else if (f0.id === state.to) tr.className = 'isTo';
-    tr.innerHTML = '<td class="name">' + f.name + '</td><td class="hidesm">' + f.w + ' × ' + f.h +
-                   '</td><td>' + r.toFixed(3) + '</td><td>' + fmtNum(state.focal*r) + '</td>';
+    tr.innerHTML = '<td class="name">' + f.name + '</td><td class="hidesm">' + f.w + ' × ' + f.h + '</td><td>' +
+                   r.toFixed(3) + '</td><td>' + fmtNum(state.focal*r) + '</td><td>' + apStr(state.fstop*r) + '</td>';
     tb.appendChild(tr);
   });
 
@@ -461,590 +526,7 @@ function render(syncFocal = true){
   if (['diag','w','h'].includes(p.get('b'))) state.basis = p.get('b');
   if (['size','shape'].includes(p.get('m'))) state.mode = p.get('m');
   $('cw').value = state.cw; $('ch').value = state.ch; $('dist').value = state.dist;
-  if (state.basis !== 'diag' || state.mode !== 'size') $('adv').open = true;
 })();
-render();
-</script>
-</body>
-</html>  :focus-visible{outline:2px solid var(--scale);outline-offset:2px}
-
-  /* 页头 */
-  .top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:clamp(18px,4vw,28px)}
-  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim-2);margin:0 0 8px}
-  h1{font-family:var(--cond);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1;letter-spacing:.04em;margin:0}
-  .lede{color:var(--dim);font-size:13px;margin:8px 0 0;max-width:40em}
-
-  /* 基准切换 */
-  .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--panel)}
-  .seg button{
-    appearance:none;border:0;background:transparent;color:var(--dim);cursor:pointer;
-    font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;padding:7px 13px;border-radius:999px;min-height:36px;
-    transition:background .16s,color .16s;
-  }
-  .seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2)}
-  @media (hover:hover){.seg button:hover{color:var(--text)}}
-
-  /* 栅格 */
-  .cols{display:grid;gap:14px;align-items:start}
-  @media (min-width:920px){
-    .cols{grid-template-columns:minmax(0,1fr) 392px;gap:18px}
-    .readout{position:sticky;top:20px}
-  }
-  .controls,.readout{display:grid;gap:14px;min-width:0}
-
-  .block{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:var(--pad)}
-  .label{
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
-    margin:0 0 13px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;
-  }
-  .label .v{color:var(--text);letter-spacing:.04em;text-transform:none}
-  .from .label .v{color:var(--mark)}
-  .to .label .v{color:var(--scale)}
-
-  /* 画幅选择器 */
-  .grp{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:start;margin-bottom:9px}
-  .grp:last-child{margin-bottom:0}
-  .gname{font-family:var(--mono);font-size:10px;color:var(--dim-2);letter-spacing:.06em;padding-top:9px;text-align:right}
-  .row{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{
-    cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;color:var(--dim);
-    font-family:var(--sans);font-size:13px;padding:6px 12px;min-height:34px;line-height:1.5;white-space:nowrap;
-    transition:color .15s,border-color .15s,background .15s;
-  }
-  @media (hover:hover){.chip:hover{color:var(--text);border-color:var(--line-2)}}
-  .from .chip[aria-pressed="true"]{color:var(--mark);border-color:var(--mark);background:#231A19}
-  .to .chip[aria-pressed="true"]{color:var(--scale);border-color:var(--scale);background:#182226}
-  @media (max-width:520px){
-    .grp{grid-template-columns:1fr;gap:5px}
-    .gname{text-align:left;padding-top:2px}
-  }
-
-  /* 自定义画幅 */
-  .custom{display:none;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);flex-wrap:wrap}
-  .custom.on{display:flex}
-  .custom label{font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.08em}
-  .custom input{
-    width:78px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);color:var(--text);
-    font-family:var(--cond);font-size:16px;padding:8px 10px;min-height:40px;font-variant-numeric:tabular-nums;
-  }
-
-  /* 焦距 */
-  .entry{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px}
-  #focal{
-    width:100%;min-width:0;background:transparent;border:0;color:var(--text);font-family:var(--cond);font-weight:500;
-    font-size:clamp(40px,10vw,54px);letter-spacing:.02em;padding:0;line-height:1.05;font-variant-numeric:tabular-nums;
-  }
-  #focal:focus{outline:0}
-  #focal::-webkit-outer-spin-button,#focal::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  #focal[type=number]{-moz-appearance:textfield}
-  .unit{font-family:var(--cond);font-size:clamp(18px,4.5vw,23px);color:var(--dim);letter-spacing:.06em}
-  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;margin:18px 0 6px;height:22px}
-  input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--line)}
-  input[type=range]::-moz-range-track{height:1px;background:var(--line)}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-10px;border-radius:50%;background:var(--mark);cursor:pointer;border:0}
-  input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:var(--mark);cursor:pointer}
-  .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--dim-2);margin-bottom:12px}
-  .preset{display:flex;flex-wrap:wrap;gap:6px}
-  .preset .chip{font-family:var(--mono);font-size:12px;padding:6px 11px}
-  .preset .chip[aria-pressed="true"]{color:var(--text);border-color:var(--line-2)}
-
-  /* 对调 */
-  .swapline{display:flex;align-items:center;gap:12px}
-  .swapline .rule{flex:1;height:1px;background:var(--line)}
-  #swap{
-    cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;color:var(--dim);
-    font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:9px 16px;min-height:40px;transition:color .16s,border-color .16s;
-  }
-  @media (hover:hover){#swap:hover{color:var(--text);border-color:var(--line-2)}}
-
-  /* 结果 */
-  .result{border:1px solid var(--line);background:linear-gradient(180deg,#1B2324,#141A19);border-radius:var(--r);padding:var(--pad)}
-  .out{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  #equiv{font-family:var(--cond);font-weight:600;font-size:clamp(52px,14vw,72px);line-height:.95;color:var(--scale);font-variant-numeric:tabular-nums}
-  .out .unit{font-size:clamp(19px,5vw,25px)}
-  .outcap{font-size:12.5px;color:var(--dim);margin:11px 0 0}
-  .resbar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
-  .ghost{
-    cursor:pointer;background:transparent;border:1px solid var(--line);border-radius:999px;color:var(--dim);
-    font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:7px 13px;min-height:34px;transition:color .16s,border-color .16s;
-  }
-  @media (hover:hover){.ghost:hover{color:var(--text);border-color:var(--line-2)}}
-  .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);margin-top:14px;overflow:hidden}
-  .stat{background:#141A19;padding:10px 12px;min-width:0}
-  .stat dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin:0 0 2px;white-space:nowrap}
-  .stat dd{margin:0;font-family:var(--cond);font-size:clamp(18px,4.4vw,22px);font-weight:500;font-variant-numeric:tabular-nums}
-  .stat dd small{font-size:11.5px;color:var(--dim);margin-left:2px}
-
-  /* 图示 */
-  .frames svg{width:100%;height:auto;display:block}
-  .modes{display:inline-flex;gap:4px}
-  .modes button{
-    appearance:none;border:1px solid var(--line);background:var(--panel-2);color:var(--dim);cursor:pointer;border-radius:999px;
-    font-family:var(--mono);font-size:10.5px;padding:5px 10px;min-height:30px;transition:color .15s,border-color .15s;
-  }
-  .modes button[aria-pressed="true"]{color:var(--text);border-color:var(--line-2)}
-
-  /* 光学参数 */
-  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .field{display:flex;flex-direction:column;gap:6px;min-width:0}
-  .field span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
-  .field select,.field input{
-    background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--r);
-    font-family:var(--cond);font-size:16px;padding:9px 11px;min-height:44px;width:100%;font-variant-numeric:tabular-nums;
-  }
-  .field select{cursor:pointer}
-  .derived{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);margin-top:12px;overflow:hidden}
-  .derived div{background:#141A19;padding:10px 12px}
-  .derived dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin:0 0 2px}
-  .derived dd{margin:0;font-family:var(--cond);font-size:21px;color:var(--scale);font-variant-numeric:tabular-nums}
-  .derived dd small{font-size:11px;color:var(--dim);margin-left:3px}
-  .note{color:var(--dim-2);font-size:11.5px;margin:11px 0 0;line-height:1.75}
-
-  /* 对照表 */
-  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:2px}
-  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:420px}
-  th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-  th:first-child,td:first-child{text-align:left}
-  th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;font-weight:400}
-  td{font-family:var(--cond);font-size:16px;color:var(--text)}
-  td.name{font-family:var(--sans);font-size:13px}
-  td.sub{font-family:var(--mono);font-size:11px;color:var(--dim)}
-  tr.isFrom td{color:var(--mark)}
-  tr.isTo td{color:var(--scale)}
-  tbody tr:last-child td{border-bottom:0}
-  @media (max-width:560px){.hidesm{display:none}table{min-width:0}}
-
-  footer{color:var(--dim-2);font-size:11.5px;line-height:1.9;margin-top:22px}
-  footer b{color:var(--dim);font-weight:500}
-  kbd{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--dim)}
-
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-</style>
-</head>
-<body>
-<div class="wrap">
-
-  <div class="top">
-    <div>
-      <p class="eyebrow">Equivalent Focal Length</p>
-      <h1>焦距换算台</h1>
-      <p class="lede">选定手上的画幅与要对照的画幅，焦距、视角、光圈、感光度同步换算。</p>
-    </div>
-    <div>
-      <p class="eyebrow" style="text-align:right">换算基准</p>
-      <div class="seg" id="basisSeg" role="group" aria-label="换算基准">
-        <button type="button" data-b="diag">对角线</button>
-        <button type="button" data-b="w">水平边</button>
-        <button type="button" data-b="h">垂直边</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="cols">
-    <div class="controls">
-
-      <section class="block from">
-        <p class="label"><span>输入画幅</span><span class="v tnum" id="fromMeta"></span></p>
-        <div id="fromPicker"></div>
-        <div class="custom" id="fromCustom">
-          <label for="cw">自定义尺寸</label>
-          <input id="cw" type="number" min="1" max="300" step="0.1" value="60" inputmode="decimal" aria-label="自定义宽度">
-          <span class="unit" style="font-size:15px">×</span>
-          <input id="ch" type="number" min="1" max="300" step="0.1" value="45" inputmode="decimal" aria-label="自定义高度">
-          <span class="unit" style="font-size:15px">mm</span>
-        </div>
-      </section>
-
-      <section class="block">
-        <p class="label"><span>焦距</span><span class="v tnum" id="focalMeta"></span></p>
-        <div class="entry">
-          <input id="focal" type="number" min="1" max="2000" step="0.5" value="50" inputmode="decimal" aria-label="焦距，单位毫米">
-          <span class="unit">mm</span>
-        </div>
-        <input id="slider" type="range" min="0" max="1000" step="1" value="0" aria-label="焦距滑块">
-        <div class="ticks"><span>6</span><span>24</span><span>50</span><span>135</span><span>400</span><span>1200</span></div>
-        <div class="preset" id="presets"></div>
-      </section>
-
-      <div class="swapline">
-        <span class="rule"></span>
-        <button id="swap" type="button">↑↓ 对调画幅</button>
-        <span class="rule"></span>
-      </div>
-
-      <section class="block to">
-        <p class="label"><span>输出画幅</span><span class="v tnum" id="toMeta"></span></p>
-        <div id="toPicker"></div>
-      </section>
-
-      <section class="block">
-        <p class="label"><span>光圈与感光度</span><span>等效换算</span></p>
-        <div class="grid2">
-          <div class="field">
-            <span>原画幅光圈</span>
-            <select id="fstop" aria-label="输入画幅上的光圈值"></select>
-          </div>
-          <div class="field">
-            <span>原画幅 ISO</span>
-            <select id="iso" aria-label="输入画幅上的感光度"></select>
-          </div>
-        </div>
-        <dl class="derived">
-          <div><dt>等效光圈</dt><dd id="fstopOut"></dd></div>
-          <div><dt>等效 ISO</dt><dd id="isoOut"></dd></div>
-        </dl>
-        <p class="note">同一视角下获得相同景深与相同噪点表现所需的数值。实际曝光的快门速度仍按原光圈与原 ISO 计算，换算值只用于跨画幅比较画面效果。</p>
-      </section>
-
-    </div>
-
-    <div class="readout">
-
-      <section class="result">
-        <div class="out"><span id="equiv"></span><span class="unit">mm</span></div>
-        <p class="outcap" id="outcap"></p>
-        <div class="resbar">
-          <button class="ghost" id="copy" type="button">复制结果</button>
-          <button class="ghost" id="share" type="button">复制链接</button>
-        </div>
-        <dl class="stats">
-          <div class="stat"><dt>换算系数</dt><dd id="ratio"></dd></div>
-          <div class="stat"><dt>对角线视角</dt><dd id="fovD"></dd></div>
-          <div class="stat"><dt>水平 / 垂直</dt><dd id="fovWH"></dd></div>
-        </dl>
-      </section>
-
-      <section class="block frames">
-        <p class="label">
-          <span>画幅图示</span>
-          <span class="modes" id="modeSeg" role="group" aria-label="图示模式">
-            <button type="button" data-m="size">实际尺寸</button>
-            <button type="button" data-m="shape">等效后构图</button>
-          </span>
-        </p>
-        <svg id="diagram" viewBox="0 0 480 320" role="img" aria-labelledby="diagTitle">
-          <title id="diagTitle">画幅对照图</title>
-        </svg>
-        <p class="note" id="diagNote"></p>
-      </section>
-
-      <section class="block">
-        <p class="label"><span>拍摄覆盖范围</span><span>按输入画幅计算</span></p>
-        <div class="grid2">
-          <div class="field">
-            <span>拍摄距离</span>
-            <input id="dist" type="number" min="0.1" max="500" step="0.1" value="3" inputmode="decimal" aria-label="拍摄距离，单位米">
-          </div>
-          <div class="field">
-            <span>画面覆盖</span>
-            <input id="cover" type="text" readonly tabindex="-1" aria-label="画面覆盖尺寸">
-          </div>
-        </div>
-        <p class="note">被摄体所在平面上，画面横向与纵向能容纳的实际尺寸，用于确定拍摄距离与站位。</p>
-      </section>
-
-    </div>
-  </div>
-
-  <section class="block" style="margin-top:14px">
-    <p class="label"><span>全画幅对照</span><span class="v tnum" id="tableMeta"></span></p>
-    <div class="tablewrap">
-      <table>
-        <thead><tr>
-          <th>画幅</th><th class="hidesm">尺寸</th><th>系数</th><th>等效焦距</th><th class="hidesm">对角线视角</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <footer>
-    <b>计算方式</b>：等效焦距 = 原焦距 × (目标画幅基准边 / 原画幅基准边)。对角线基准保留整体视角，水平基准保留横向构图，垂直基准保留纵向构图，画幅比例不同时三者结果会有差别。<br>
-    <b>快捷键</b>：<kbd>↑</kbd> <kbd>↓</kbd> 微调焦距，<kbd>S</kbd> 对调画幅。参数会写入网址，可直接收藏或发送给别人。<br>
-    <b>取值</b>：各厂标称的有效成像面积略有出入，胶片画幅按常见实际曝光尺寸计算，结果可作对照用。
-  </footer>
-
-</div>
-
-<script>
-const FORMATS = [
-  { id:'p1',    g:'中画幅', name:'53.4×40',  w:53.4, h:40.0 },
-  { id:'gfx',   g:'中画幅', name:'44×33',    w:44,   h:33   },
-  { id:'leicas',g:'中画幅', name:'徕卡 S 45×30', w:45, h:30 },
-  { id:'ff',    g:'135',    name:'全画幅 36×24', w:36, h:24 },
-  { id:'apsh',  g:'135',    name:'APS-H 28.7×19', w:28.7, h:19 },
-  { id:'apsc',  g:'APS-C',  name:'23.5×15.6', w:23.5, h:15.6 },
-  { id:'canon', g:'APS-C',  name:'佳能 22.3×14.9', w:22.3, h:14.9 },
-  { id:'m43',   g:'小画幅', name:'M4/3 17.3×13', w:17.3, h:13 },
-  { id:'one',   g:'小画幅', name:'1 英寸 13.2×8.8', w:13.2, h:8.8 },
-  { id:'f645',  g:'胶片',   name:'645 56×41.5', w:56, h:41.5 },
-  { id:'f66',   g:'胶片',   name:'6×6 56×56', w:56, h:56 },
-  { id:'f67',   g:'胶片',   name:'6×7 70×56', w:70, h:56 },
-  { id:'f45',   g:'胶片',   name:'4×5 121×97', w:121, h:97 },
-  { id:'custom',g:'自定义', name:'自定义画幅', w:60, h:45 }
-];
-const STOPS = [0.95,1,1.1,1.2,1.4,1.6,1.7,1.8,2,2.2,2.5,2.8,3.2,3.5,4,4.5,5,5.6,6.3,7.1,
-               8,9,10,11,13,14,16,18,20,22,25,29,32,36,40,45,51,57,64];
-const ISOS = [50,64,100,125,160,200,400,800,1600,3200,6400,12800];
-const PRESETS = [16,23,24,35,50,63,85,110,135,200];
-const F_MIN = 6, F_MAX = 1200;
-
-const state = { from:'ff', to:'gfx', focal:50, basis:'diag', fstop:2, iso:100, dist:3, cw:60, ch:45, mode:'size' };
-
-const fStop = v => v < 10 ? 'f/' + (Math.round(v*100)/100) : 'f/' + Math.round(v);
-const fmtNum = n => { const r = Math.round(n*10)/10; return Number.isInteger(r) ? String(r) : r.toFixed(1); };
-const fmt2 = n => n < 10 ? n.toFixed(2) : n.toFixed(1);
-
-function fmtOf(id){
-  const f = FORMATS.find(x => x.id === id);
-  return f.id === 'custom' ? { ...f, w:state.cw, h:state.ch, name:'自定义 ' + state.cw + '×' + state.ch } : f;
-}
-const basisOf = (f, b) => b === 'w' ? f.w : b === 'h' ? f.h : Math.hypot(f.w, f.h);
-const basisName = { diag:'对角线', w:'水平边', h:'垂直边' };
-
-/* 控件构建 */
-function buildPicker(el, key){
-  const groups = [...new Set(FORMATS.map(f => f.g))];
-  groups.forEach(g => {
-    const wrap = document.createElement('div');
-    wrap.className = 'grp';
-    const gn = document.createElement('span');
-    gn.className = 'gname'; gn.textContent = g;
-    const row = document.createElement('div');
-    row.className = 'row';
-    FORMATS.filter(f => f.g === g).forEach(f => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'chip'; b.dataset.fid = f.id; b.textContent = f.name;
-      b.addEventListener('click', () => { state[key] = f.id; render(); });
-      row.appendChild(b);
-    });
-    wrap.append(gn, row);
-    el.appendChild(wrap);
-  });
-}
-buildPicker(document.getElementById('fromPicker'), 'from');
-buildPicker(document.getElementById('toPicker'), 'to');
-
-const presetRow = document.getElementById('presets');
-PRESETS.forEach(v => {
-  const c = document.createElement('button');
-  c.type = 'button'; c.className = 'chip'; c.dataset.v = v; c.textContent = v;
-  c.addEventListener('click', () => setFocal(v));
-  presetRow.appendChild(c);
-});
-
-const sel = document.getElementById('fstop');
-[{n:'大光圈',t:s=>s<2.8},{n:'常用',t:s=>s>=2.8&&s<=8},{n:'小光圈',t:s=>s>8}].forEach(g => {
-  const og = document.createElement('optgroup'); og.label = g.n;
-  STOPS.filter(g.t).forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = fStop(s); og.appendChild(o); });
-  sel.appendChild(og);
-});
-const isoSel = document.getElementById('iso');
-ISOS.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = 'ISO ' + v; isoSel.appendChild(o); });
-
-document.getElementById('basisSeg').querySelectorAll('button').forEach(b =>
-  b.addEventListener('click', () => { state.basis = b.dataset.b; render(); }));
-document.getElementById('modeSeg').querySelectorAll('button').forEach(b =>
-  b.addEventListener('click', () => { state.mode = b.dataset.m; render(); }));
-
-/* 焦距滑块使用对数刻度 */
-const toSlider = f => Math.round(1000 * Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN));
-const fromSlider = t => {
-  const v = F_MIN * Math.pow(F_MAX / F_MIN, t / 1000);
-  return v < 20 ? Math.round(v*2)/2 : v < 100 ? Math.round(v) : Math.round(v/5)*5;
-};
-const focalInput = document.getElementById('focal');
-const slider = document.getElementById('slider');
-function setFocal(v){ state.focal = v; render(); }
-focalInput.addEventListener('input', () => {
-  const v = parseFloat(focalInput.value);
-  if (!isNaN(v) && v > 0){ state.focal = v; render(false); }
-});
-slider.addEventListener('input', () => { state.focal = fromSlider(parseFloat(slider.value)); render(); });
-
-document.getElementById('swap').addEventListener('click', () => {
-  const t = state.from; state.from = state.to; state.to = t; render();
-});
-['cw','ch'].forEach(k => document.getElementById(k).addEventListener('input', e => {
-  const v = parseFloat(e.target.value);
-  if (!isNaN(v) && v > 0){ state[k] = v; render(false); }
-}));
-sel.addEventListener('change', () => { state.fstop = parseFloat(sel.value); render(); });
-isoSel.addEventListener('change', () => { state.iso = parseFloat(isoSel.value); render(); });
-document.getElementById('dist').addEventListener('input', e => {
-  const v = parseFloat(e.target.value);
-  if (!isNaN(v) && v > 0){ state.dist = v; render(false); }
-});
-
-document.addEventListener('keydown', e => {
-  const typing = ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName);
-  if (!typing && (e.key === 's' || e.key === 'S')){ document.getElementById('swap').click(); }
-  if (!typing && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
-    e.preventDefault();
-    const step = state.focal < 20 ? 0.5 : state.focal < 100 ? 1 : 5;
-    setFocal(Math.max(1, Math.round((state.focal + (e.key === 'ArrowUp' ? step : -step)) * 10) / 10));
-  }
-});
-
-async function copyText(text, btn, done){
-  try { await navigator.clipboard.writeText(text); }
-  catch (err) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); } catch (e2) {}
-    ta.remove();
-  }
-  const old = btn.textContent; btn.textContent = done;
-  setTimeout(() => { btn.textContent = old; }, 1400);
-}
-document.getElementById('copy').addEventListener('click', e => {
-  const from = fmtOf(state.from), to = fmtOf(state.to);
-  const ratio = basisOf(to, state.basis) / basisOf(from, state.basis);
-  copyText(from.name + ' ' + fmtNum(state.focal) + 'mm ' + fStop(state.fstop) + ' → ' +
-           to.name + ' ' + fmtNum(state.focal*ratio) + 'mm ' + fStop(state.fstop*ratio) +
-           '（' + basisName[state.basis] + '基准，系数 ' + ratio.toFixed(3) + '）', e.target, '已复制');
-});
-document.getElementById('share').addEventListener('click', e => copyText(location.href, e.target, '已复制'));
-
-/* 图示 */
-function drawDiagram(from, to){
-  const svg = document.getElementById('diagram');
-  const NS = 'http://www.w3.org/2000/svg';
-  svg.innerHTML = '<title id="diagTitle">画幅对照图</title>';
-  const CX = 240, CY = 150, BOXW = 452, BOXH = 240;
-  const mk = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
-  const rect = (w, h, kind) => {
-    const r = mk('rect', {
-      x: CX - w/2, y: CY - h/2, width: w, height: h, rx: 2,
-      fill: kind === 'from' ? 'rgba(210,69,47,.14)' : 'none',
-      stroke: kind === 'from' ? '#D2452F' : kind === 'to' ? '#6FA8C7' : '#2A3332',
-      'stroke-width': kind === 'other' ? 1 : 1.8
-    });
-    if (kind === 'to') r.setAttribute('stroke-dasharray', '5 4');
-    svg.appendChild(r);
-  };
-  const tag = (x, y, txt, color, anchor) => svg.appendChild(Object.assign(
-    mk('text', { x, y, fill: color, 'font-size': 12.5, 'text-anchor': anchor || 'start',
-                 'font-family': 'ui-monospace, Menlo, Consolas, monospace' }),
-    { textContent: txt }));
-
-  if (state.mode === 'size'){
-    const k = Math.min(BOXW / Math.max(from.w, to.w), BOXH / Math.max(from.h, to.h));
-    FORMATS.map(f => fmtOf(f.id))
-      .filter(f => f.id === from.id || f.id === to.id ||
-                   (f.id !== 'custom' && f.w*k <= BOXW && f.h*k <= BOXH))
-      .sort((a,b) => b.w*b.h - a.w*a.h)
-      .forEach(f => rect(f.w*k, f.h*k, f.id === from.id ? 'from' : f.id === to.id ? 'to' : 'other'));
-    tag(CX - from.w*k/2 + 6, CY - from.h*k/2 + 17, from.name, '#D2452F');
-    tag(CX + to.w*k/2 - 6, CY + to.h*k/2 - 8, to.name, '#6FA8C7', 'end');
-    document.getElementById('diagNote').textContent =
-      '各画幅按实际尺寸等比绘制。填充为输入画幅，虚线为输出画幅，灰线为其余画幅。';
-  } else {
-    const target = 320;
-    const s1 = target / basisOf(from, state.basis), s2 = target / basisOf(to, state.basis);
-    const k = Math.min(BOXW / Math.max(from.w*s1, to.w*s2), BOXH / Math.max(from.h*s1, to.h*s2));
-    rect(from.w*s1*k, from.h*s1*k, 'from');
-    rect(to.w*s2*k, to.h*s2*k, 'to');
-    const ar = f => {
-      const t = f.w / f.h;
-      let best = { d:1, n:Math.round(t), err:Infinity };
-      for (let d = 1; d <= 16; d++){
-        const n = Math.round(t * d), err = Math.abs(t - n/d);
-        if (err < best.err - 1e-9){ best = { d, n, err }; }
-        if (err < 0.008) break;
-      }
-      return best.n + ':' + best.d;
-    };
-    tag(14, 26, from.name + '  ' + ar(from), '#D2452F');
-    tag(466, 26, to.name + '  ' + ar(to), '#6FA8C7', 'end');
-    document.getElementById('diagNote').textContent =
-      '换到等效焦距之后，两个画幅的' + basisName[state.basis] + '一致，画面形状的差别就是构图上真正的取舍。';
-  }
-}
-
-/* 渲染 */
-function render(syncInputs = true){
-  const from = fmtOf(state.from), to = fmtOf(state.to);
-  const b = state.basis;
-  const ratio = basisOf(to, b) / basisOf(from, b);
-  const equiv = state.focal * ratio;
-  const deg = (d, f) => 2 * Math.atan(d / (2*f)) * 180 / Math.PI;
-
-  document.querySelectorAll('#fromPicker .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.fid === state.from));
-  document.querySelectorAll('#toPicker .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.fid === state.to));
-  document.querySelectorAll('#presets .chip').forEach(c => c.setAttribute('aria-pressed', parseFloat(c.dataset.v) === state.focal));
-  document.querySelectorAll('#basisSeg button').forEach(x => x.setAttribute('aria-pressed', x.dataset.b === b));
-  document.querySelectorAll('#modeSeg button').forEach(x => x.setAttribute('aria-pressed', x.dataset.m === state.mode));
-  document.getElementById('fromCustom').classList.toggle('on', state.from === 'custom' || state.to === 'custom');
-
-  if (syncInputs){ focalInput.value = state.focal; }
-  slider.value = toSlider(Math.min(F_MAX, Math.max(F_MIN, state.focal)));
-  sel.value = state.fstop; isoSel.value = state.iso;
-
-  document.getElementById('equiv').textContent = fmtNum(equiv);
-  document.getElementById('ratio').innerHTML = ratio.toFixed(3) + '<small>×</small>';
-  document.getElementById('fovD').innerHTML = deg(Math.hypot(from.w, from.h), state.focal).toFixed(1) + '<small>°</small>';
-  document.getElementById('fovWH').innerHTML = deg(from.w, state.focal).toFixed(1) + '<small>/</small>' + deg(from.h, state.focal).toFixed(1) + '<small>°</small>';
-  document.getElementById('outcap').textContent =
-    from.name + ' 上的 ' + fmtNum(state.focal) + 'mm，按' + basisName[b] + '对齐后相当于 ' + to.name + ' 上的 ' + fmtNum(equiv) + 'mm';
-  document.getElementById('fromMeta').textContent = from.w + '×' + from.h + ' · 对角线 ' + Math.hypot(from.w, from.h).toFixed(1) + 'mm';
-  document.getElementById('toMeta').textContent = to.w + '×' + to.h + ' · 对角线 ' + Math.hypot(to.w, to.h).toFixed(1) + 'mm';
-  document.getElementById('focalMeta').textContent = '滑块 6 至 1200mm，可直接输入任意值';
-
-  const eqStop = state.fstop * ratio;
-  const near = STOPS.reduce((a,x) => Math.abs(Math.log(x)-Math.log(eqStop)) < Math.abs(Math.log(a)-Math.log(eqStop)) ? x : a);
-  document.getElementById('fstopOut').innerHTML = 'f/' + fmt2(eqStop) + '<small>≈ ' + fStop(near) + '</small>';
-  const eqIso = state.iso * ratio * ratio;
-  const nearIso = ISOS.reduce((a,x) => Math.abs(Math.log(x)-Math.log(eqIso)) < Math.abs(Math.log(a)-Math.log(eqIso)) ? x : a);
-  document.getElementById('isoOut').innerHTML = Math.round(eqIso) + '<small>≈ ' + nearIso + '</small>';
-
-  const cw = state.dist * 1000 * from.w / state.focal, chh = state.dist * 1000 * from.h / state.focal;
-  document.getElementById('cover').value = (cw/1000).toFixed(2) + ' × ' + (chh/1000).toFixed(2) + ' m';
-
-  document.getElementById('tableMeta').textContent =
-    from.name + ' ' + fmtNum(state.focal) + 'mm · ' + basisName[b] + '基准';
-  const tb = document.getElementById('tbody');
-  tb.innerHTML = '';
-  FORMATS.forEach(f0 => {
-    const f = fmtOf(f0.id);
-    const r = basisOf(f, b) / basisOf(from, b);
-    const tr = document.createElement('tr');
-    if (f0.id === state.from) tr.className = 'isFrom';
-    else if (f0.id === state.to) tr.className = 'isTo';
-    tr.innerHTML =
-      '<td class="name">' + f.name + '</td>' +
-      '<td class="sub hidesm">' + f.w + ' × ' + f.h + '</td>' +
-      '<td>' + r.toFixed(3) + '</td>' +
-      '<td>' + fmtNum(state.focal * r) + '</td>' +
-      '<td class="hidesm">' + deg(Math.hypot(f.w, f.h), state.focal * r).toFixed(1) + '°</td>';
-    tb.appendChild(tr);
-  });
-
-  drawDiagram(from, to);
-  writeHash();
-}
-
-/* 网址参数 */
-function writeHash(){
-  const p = new URLSearchParams({ from:state.from, to:state.to, f:state.focal, b:state.basis,
-    n:state.fstop, iso:state.iso, d:state.dist, cw:state.cw, ch:state.ch });
-  history.replaceState(null, '', '#' + p.toString());
-}
-function readHash(){
-  if (!location.hash) return;
-  const p = new URLSearchParams(location.hash.slice(1));
-  const ids = FORMATS.map(f => f.id);
-  if (ids.includes(p.get('from'))) state.from = p.get('from');
-  if (ids.includes(p.get('to'))) state.to = p.get('to');
-  const num = (k, key) => { const v = parseFloat(p.get(k)); if (!isNaN(v) && v > 0) state[key] = v; };
-  num('f','focal'); num('n','fstop'); num('iso','iso'); num('d','dist'); num('cw','cw'); num('ch','ch');
-  if (['diag','w','h'].includes(p.get('b'))) state.basis = p.get('b');
-  document.getElementById('cw').value = state.cw;
-  document.getElementById('ch').value = state.ch;
-  document.getElementById('dist').value = state.dist;
-}
-readHash();
 render();
 </script>
 </body>
